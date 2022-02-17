@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "Before assembling"
+touch $HOME/src/myassamblescript_zzz
