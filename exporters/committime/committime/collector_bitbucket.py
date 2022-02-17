@@ -2,9 +2,9 @@ import json
 import logging
 
 import requests
-from collector_base import AbstractCommitCollector
+from pelorus_common import pelorus
 
-import pelorus
+from .collector_base import AbstractCommitCollector
 
 # import urllib3
 # urllib3.disable_warnings()

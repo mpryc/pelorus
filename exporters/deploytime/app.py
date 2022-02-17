@@ -8,10 +8,9 @@ import attr
 from kubernetes import client
 from openshift.dynamic import DynamicClient
 from openshift.dynamic.exceptions import ResourceNotFoundError
+from pelorus_common import pelorus
 from prometheus_client import start_http_server
 from prometheus_client.core import REGISTRY, GaugeMetricFamily
-
-import pelorus
 
 supported_replica_objects = {"ReplicaSet", "ReplicationController"}
 

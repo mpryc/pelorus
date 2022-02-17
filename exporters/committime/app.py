@@ -11,10 +11,9 @@ from committime.collector_github import GitHubCommitCollector
 from committime.collector_gitlab import GitLabCommitCollector
 from kubernetes import client
 from openshift.dynamic import DynamicClient
+import pelorus
 from prometheus_client import start_http_server
 from prometheus_client.core import REGISTRY
-
-import pelorus
 
 REQUIRED_CONFIG = ["GIT_USER", "GIT_TOKEN"]
 

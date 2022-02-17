@@ -1,0 +1,2 @@
+openshift < 0.12       # module openshift
+nonexisting

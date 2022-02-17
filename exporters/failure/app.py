@@ -4,12 +4,11 @@ import os
 import sys
 import time
 
-from collector_jira import JiraFailureCollector
-from collector_servicenow import ServiceNowFailureCollector
+from failure.collector_jira import JiraFailureCollector
+from failure.collector_servicenow import ServiceNowFailureCollector
+from pelorus_common import pelorus
 from prometheus_client import start_http_server
 from prometheus_client.core import REGISTRY
-
-import pelorus
 
 REQUIRED_CONFIG = ["USER", "TOKEN", "SERVER"]
 

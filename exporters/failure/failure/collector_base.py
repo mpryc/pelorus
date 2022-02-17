@@ -1,9 +1,8 @@
 import logging
 from abc import abstractmethod
 
+from pelorus_common import pelorus
 from prometheus_client.core import GaugeMetricFamily
-
-import pelorus
 
 
 class AbstractFailureCollector(pelorus.AbstractPelorusExporter):

@@ -1,31 +1,37 @@
 import logging
 
 import requests
-from collector_base import AbstractCommitCollector
+from pelorus_common import pelorus
 
-import pelorus
-
-# import urllib3
-# urllib3.disable_warnings()
+from .collector_base import AbstractCommitCollector
 
 
-class GiteaCommitCollector(AbstractCommitCollector):
-
-    _prefix_pattern = "%s/api/v1/repos/"
-    _defaultapi = "try.gitea.io/api/v1"
+class GitHubCommitCollector(AbstractCommitCollector):
+    _prefix_pattern = "https://%s/repos/"
+    _defaultapi = "api.github.com"
     _prefix = _prefix_pattern % _defaultapi
-    _suffix = "/git/commits/"
+    _suffix = "/commits/"
 
-    def __init__(self, kube_client, username, token, namespaces, apps, git_api=None):
+    def __init__(
+        self,
+        kube_client,
+        username,
+        token,
+        namespaces,
+        apps,
+        git_api=None,
+        tls_verify=None,
+    ):
         super().__init__(
             kube_client,
             username,
             token,
             namespaces,
             apps,
-            "Gitea",
-            "%Y-%m-%dT%H:%M:%S",
+            "GitHub",
+            "%Y-%m-%dT%H:%M:%SZ",
             git_api,
+            tls_verify,
         )
         if git_api is not None and len(git_api) > 0:
             logging.info("Using non-default API: %s" % (git_api))
@@ -33,21 +39,12 @@ class GiteaCommitCollector(AbstractCommitCollector):
             self._git_api = self._defaultapi
         self._prefix = self._prefix_pattern % self._git_api
 
-    # base class impl
     def get_commit_time(self, metric):
         """Method called to collect data and send to Prometheus"""
-        session = requests.Session()
-        session.verify = False
-
-        git_server = metric.git_server
-
-        if (
-            "github" in git_server
-            or "bitbucket" in git_server
-            or "gitlab" in git_server
-            or "azure" in git_server
-        ):
-            logging.warn("Skipping non Gitea server, found %s" % (git_server))
+        git_server = metric.git_fqdn
+        # check for gitlab or bitbucket
+        if "gitlab" in git_server or "bitbucket" in git_server:
+            logging.warn("Skipping non GitHub server, found %s" % (git_server))
             return None
 
         url = (
@@ -58,10 +55,8 @@ class GiteaCommitCollector(AbstractCommitCollector):
             + self._suffix
             + metric.commit_hash
         )
-        logging.info("URL %s" % (url))
-        response = requests.get(url, auth=(self._username, self._token))
-        logging.info(
-            "response %s" % (requests.get(url, auth=(self._username, self._token)))
+        response = requests.get(
+            url, auth=(self._username, self._token), verify=self._tls_verify
         )
         if response.status_code != 200:
             # This will occur when trying to make an API call to non-Github
@@ -70,7 +65,7 @@ class GiteaCommitCollector(AbstractCommitCollector):
                 % (
                     metric.build_name,
                     metric.commit_hash,
-                    metric.repo_url,
+                    metric.repo_fqdn,
                     str(response.status_code),
                 )
             )
@@ -78,10 +73,8 @@ class GiteaCommitCollector(AbstractCommitCollector):
             commit = response.json()
             try:
                 metric.commit_time = commit["commit"]["committer"]["date"]
-                logging.debug("metric.commit_time %s" % (str(metric.commit_time)[:19]))
-                logging.debug("self._timedate_format %s" % (self._timedate_format))
                 metric.commit_timestamp = pelorus.convert_date_time_to_timestamp(
-                    (str(metric.commit_time)[:19]), self._timedate_format
+                    metric.commit_time, self._timedate_format
                 )
             except Exception:
                 logging.error(

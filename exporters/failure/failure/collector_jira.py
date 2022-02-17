@@ -2,10 +2,10 @@ import logging
 from datetime import datetime
 
 import pytz
-from collector_base import AbstractFailureCollector, TrackerIssue
 from jira import JIRA
+from pelorus_common import pelorus
 
-import pelorus
+from .collector_base import AbstractFailureCollector, TrackerIssue
 
 
 class JiraFailureCollector(AbstractFailureCollector):

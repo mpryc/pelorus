@@ -4,9 +4,9 @@ from datetime import datetime
 
 import pytz
 import requests
-from collector_base import AbstractFailureCollector, TrackerIssue
+from pelorus_common import pelorus
 
-import pelorus
+from .collector_base import AbstractFailureCollector, TrackerIssue
 
 SN_HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
 SN_QUERY = "/api/now/table/incident?sysparm_fields={0}%2C{1}%2Cstate%2Cnumber%2C{2} \

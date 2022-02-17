@@ -8,9 +8,8 @@ from typing import Iterable
 
 from committime import CommitMetric
 from jsonpath_ng import parse
+from pelorus_common import pelorus
 from prometheus_client.core import GaugeMetricFamily
-
-import pelorus
 
 
 class AbstractCommitCollector(pelorus.AbstractPelorusExporter):

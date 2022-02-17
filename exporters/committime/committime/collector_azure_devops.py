@@ -2,10 +2,10 @@ import logging
 
 import requests
 from azure.devops.connection import Connection
-from collector_base import AbstractCommitCollector
 from msrest.authentication import BasicAuthentication
+from pelorus_common import pelorus
 
-import pelorus
+from .collector_base import AbstractCommitCollector
 
 
 class AzureDevOpsCommitCollector(AbstractCommitCollector):
