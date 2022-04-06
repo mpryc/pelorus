@@ -3,7 +3,7 @@ name: Pelorus Exporter Build
 on:
   push:
     branches:
-      - master
+      - test_build
     paths:
       - exporters/
       - charts/pelorus/charts/exporters/templates/_buildconfig.yaml

@@ -1,4 +1,4 @@
-# Metrics Exporters (in development)
+# Metrics Exporters (in development) - test
 
 Before deploying, you must export your GITHUB_REPOS, GITHUB_USER and GITHUB_TOKEN to your shell. Then run:
 
