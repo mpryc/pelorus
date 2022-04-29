@@ -50,7 +50,7 @@ def test_env_var_default():
     # No default value found
     os.environ["PELORUS_TEST_ENV_VAR_DEFAULT"] = pelorus.utils.DEFAULT_VAR_KEYWORD
     with pytest.raises(ValueError):
-        get_env_var("PELORUS_TEST_ENV_VAR_DEFAULT")
+        get_env_var("PELORUS_TEST_ENV_VAR_DEFAULT", is_required=True)
 
     # Use env variable instead of default value
     if "PELORUS_DEFAULT_KEYWORD" in os.environ:
@@ -85,7 +85,7 @@ def test_env_var_default():
     os.environ["PELORUS_DEFAULT_KEYWORD"] = "usepelorusdefaultvalue"
     os.environ["PELORUS_TEST_ENV_VAR_DEFAULT"] = "usepelorusdefaultvalue"
     with pytest.raises(ValueError):
-        get_env_var("PELORUS_TEST_ENV_VAR_DEFAULT")
+        get_env_var("PELORUS_TEST_ENV_VAR_DEFAULT", is_required=True)
 
     # Case where the env variable may be exactly the same as the default value:
     os.environ["PELORUS_DEFAULT_KEYWORD"] = "usepelorusdefaultvalue"

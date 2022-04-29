@@ -157,7 +157,9 @@ def get_env_var(var_name: str) -> Optional[str]:
     ...
 
 
-def get_env_var(var_name: str, default_value: Optional[str] = None) -> Optional[str]:
+def get_env_var(
+    var_name: str, default_value: Optional[str] = None, is_required: bool = False
+) -> Optional[str]:
     """
     `get_env_var` modifies standard os.getenv behavior to allow using default python variable values
     when:
@@ -193,7 +195,7 @@ def get_env_var(var_name: str, default_value: Optional[str] = None) -> Optional[
 
     env_var = os.getenv(var_name, default_value)
     if env_var == default_keyword:
-        if default_value is None:
+        if default_value is None and is_required:
             raise ValueError(f"default value not present for SHELL env var: {var_name}")
         return default_value
 
