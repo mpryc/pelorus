@@ -158,7 +158,7 @@ def get_env_var(var_name: str) -> Optional[str]:
 
 
 def get_env_var(
-    var_name: str, default_value: Optional[str] = None, is_required: bool = False
+    var_name: str, default_value: Optional[str] = None, is_required: bool = True
 ) -> Optional[str]:
     """
     `get_env_var` modifies standard os.getenv behavior to allow using default python variable values

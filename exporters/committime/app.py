@@ -55,7 +55,7 @@ if __name__ == "__main__":
         logging.info(
             "No GIT_USER and no GIT_TOKEN given. This is okay for public repositories only."
         )
-    git_api = pelorus.utils.get_env_var("GIT_API")
+    git_api = pelorus.utils.get_env_var("GIT_API", pelorus.DEFAULT_GIT_API)
     git_provider = pelorus.utils.get_env_var("GIT_PROVIDER", pelorus.DEFAULT_GIT)
     tls_verify = bool(
         strtobool(pelorus.utils.get_env_var("TLS_VERIFY", pelorus.DEFAULT_TLS_VERIFY))

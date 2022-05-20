@@ -15,6 +15,7 @@ DEFAULT_LOG_LEVEL = "INFO"
 DEFAULT_LOG_FORMAT = "%(asctime)-15s %(levelname)-8s %(message)s"
 DEFAULT_LOG_DATE_FORMAT = "%m-%d-%Y %H:%M:%S"
 DEFAULT_GIT = "github"
+DEFAULT_GIT_API = ""
 DEFAULT_TLS_VERIFY = "True"
 DEFAULT_TRACKER = "jira"
 DEFAULT_TRACKER_APP_LABEL = "unknown"
@@ -134,7 +135,7 @@ def upgrade_legacy_vars():
     if token and not utils.get_env_var("GIT_TOKEN"):
         os.environ["GIT_TOKEN"] = token
     if api and not utils.get_env_var("GIT_API"):
-        os.environ["GIT_API"] = api
+        os.environ["GIT_API"] = DEFAULT_GIT_API
 
 
 def url_joiner(url, path, trailing=None):
