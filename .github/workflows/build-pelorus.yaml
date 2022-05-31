@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - release_tag
     paths:
       - exporters/
       - charts/pelorus/charts/exporters/templates/_buildconfig.yaml
