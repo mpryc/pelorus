@@ -3,10 +3,7 @@ name: Pelorus Release
 on:
   release:
     types:
-      - released
-
-env:
-  releasetag: 'stable'
+      - prereleased
 
 jobs:
   release:
@@ -16,32 +13,32 @@ jobs:
       - name: Checkout opl-content-api
         uses: actions/checkout@v2
 
-      - name: Tag committime with release version
+      - name: Tag committime with (pre)release version
         uses: tinact/docker.image-retag@1.0.2
         with:
           image_name: pelorus/committime-exporter
           image_old_tag: ${{ github.sha }}
-          image_new_tag: ${{ env.releasetag }}
+          image_new_tag: ${{ github.event.release.tag_name }}
           registry: quay.io
           registry_username: ${{ secrets.QUAY_USERNAME }}
           registry_password: ${{ secrets.QUAY_PASSWORD }}
 
-      - name: Tag deploytime with released version
+      - name: Tag deploytime with (pre)released version
         uses: tinact/docker.image-retag@1.0.2
         with:
           image_name: pelorus/deploytime-exporter
           image_old_tag: ${{ github.sha }}
-          image_new_tag: ${{ env.releasetag }}
+          image_new_tag: ${{ github.event.release.tag_name }}
           registry: quay.io
           registry_username: ${{ secrets.QUAY_USERNAME }}
           registry_password: ${{ secrets.QUAY_PASSWORD }}
 
-      - name: Tag failure with released version
+      - name: Tag failure with (pre)released version
         uses: tinact/docker.image-retag@1.0.2
         with:
           image_name: pelorus/failure-exporter
           image_old_tag: ${{ github.sha }}
-          image_new_tag: ${{ env.releasetag }}
+          image_new_tag: ${{ github.event.release.tag_name }}
           registry: quay.io
           registry_username: ${{ secrets.QUAY_USERNAME }}
           registry_password: ${{ secrets.QUAY_PASSWORD }}
