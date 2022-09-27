@@ -26,11 +26,13 @@ Help()
 # Defaults
 current_branch="$(git symbolic-ref HEAD)"
 current_branch=${current_branch##refs/heads/}
-url="https://github.com/konveyor/pelorus"
+url=""
 build_type="binary"
 NO_HUMAN=false
 sleep_between=300
 no_deployments=1
+REMOTE_BRANCH_EXISTS=false
+PELORUS_WORKING_DIR=""
 
 # Get the options
 while getopts ":hg:b:r:n:t:c:a:" option; do
@@ -60,19 +62,17 @@ while getopts ":hg:b:r:n:t:c:a:" option; do
    esac
 done
 
-if [[ $(git status --porcelain --untracked-files=no) ]]; then
-  echo "Your local repository contains modified files and can not continue..."
-  git status --porcelain --untracked-files=no
-  exit 1
-fi
-
 echo "============================"
 echo "Executing the ${app_name} demo for Pelorus..."
 echo ""
 echo "*** Current Options used ***"
 echo "App name: ${app_name}"
 echo "Used namespace: ${app_namespace}"
-echo "Git URL: $url"
+if [[ "$url" != "" ]]; then
+  echo "Git URL: $url"
+else
+  echo "Git repository path: $(pwd)"
+fi
 echo "Git ref: $current_branch"
 echo "Build Type: $build_type"
 echo "No interaction mode: ${NO_HUMAN}"
@@ -94,6 +94,59 @@ if ! [[ $all_cmds_found ]]; then exit 1; fi
 
 tekton_setup_dir="$(dirname "${BASH_SOURCE[0]}")/tekton-demo-setup"
 python_example_txt="$(dirname "${BASH_SOURCE[0]}")/python-example/response.txt"
+
+# Fail early if master is being used
+if [[ "$current_branch" == "master" ]]; then
+  echo "Do not use master branch..."
+  exit 1
+fi
+
+# Use local directory as url
+if [[ "$url" == "" ]] && [[ $(git status --porcelain --untracked-files=no) ]]; then
+  echo "Your local repository contains modified files and can not continue..."
+  git status --porcelain --untracked-files=no
+  exit 1
+fi
+
+# Check if the remote branch exists
+# if url is "" means user want to run script from within local folder
+# For the local folder, we prefer to run ls-remote over listing of branches, because
+# remote branch may have been removed
+if [[ "$url" == "" ]]; then
+  if git ls-remote --heads  2>/dev/null | grep "${current_branch}">/dev/null; then
+    REMOTE_BRANCH_EXISTS=true
+  fi
+  # Top level git repository
+  PELORUS_WORKING_DIR="$(git rev-parse --show-toplevel)" || exit 1
+elif [[ "$url" != "" ]]; then
+  # Create temporary directory
+  PELORUS_DEMO_TMP_DIR=$( mktemp -d -t pelorus_tekton_demo_XXXXX ) || exit 1
+  echo "Pre: Temp directory created: ${PELORUS_DEMO_TMP_DIR}"
+  if git ls-remote --heads "${url}" "${current_branch}"  2>/dev/null | grep "${current_branch}">/dev/null; then
+    REMOTE_BRANCH_EXISTS=true
+  fi
+  git clone "${url}" "${PELORUS_DEMO_TMP_DIR}/pelorus"
+  pushd "${PELORUS_DEMO_TMP_DIR}/pelorus" || exit 1
+    PELORUS_WORKING_DIR="$( git rev-parse --show-toplevel )" || exit 1
+  popd
+fi
+
+# Ensure we are on the proper branch, if branch is not in remote create one
+echo "Pre: Using Pelorus git dir: ${PELORUS_WORKING_DIR}"
+pushd "${PELORUS_WORKING_DIR}" || exit 1
+  if [ "${REMOTE_BRANCH_EXISTS}" == true ]; then
+    echo "Pre: Using existing remote branch: ${current_branch}"
+    git pull
+    git checkout "${current_branch}"
+  elif [ "${REMOTE_BRANCH_EXISTS}" == false ]; then
+    echo "Pre: Creating new branch: ${current_branch}"
+    git checkout -b "${current_branch}"
+    git push --set-upstream origin "${current_branch}"
+  else
+    echo "ERROR: Remote branch check went terribly wrong, exitting"
+    exit 1
+  fi
+popd || exit 1
 
 # Create namespace if one doesn't exist
 if oc get namespace "${app_namespace}" >/dev/null 2>&1 ; then
@@ -137,11 +190,25 @@ counter=1
 
 function run_pipeline {
     set -x
-    tkn pipeline start -n "${app_namespace}" --showlog "${app_name}-pipeline" \
-      -w name=repo,claimName="${app_name}-build-pvc" \
-      -p git-url="$url" -p git-revision="$current_branch" \
-      -l app.kubernetes.io/name="${app_name}" \
-      -p BUILD_TYPE="$build_type"
+    pushd ${PELORUS_WORKING_DIR} || exit 1
+      GIT_TKN_BRANCH=$(git symbolic-ref --short HEAD)
+      GIT_TKN_URL=$(git config --get remote.origin.url)
+      # Tekton does not have ssh certificates, so needs to use http/https
+      if [[ "${GIT_TKN_URL}" != http* ]]; then
+        if [[ "${GIT_TKN_URL}" == git@* ]]
+          # Replace:
+          #   git@github.com:mpryc/pelorus.git
+          #   https://github.com/mpryc/pelorus.git
+          GIT_TKN_URL=$( echo "${GIT_TKN_URL}" | sed 's/\:/\//g' | sed 's/git\@/https\:\/\//g' )
+        fi
+      fi
+      echo "Running pipeline for the '${GIT_TKN_URL}' repo and '${GIT_TKN_BRANCH}' branch"
+      tkn pipeline start -n "${app_namespace}" --showlog "${app_name}-pipeline" \
+        -w name=repo,claimName="${app_name}-build-pvc" \
+        -p git-url="${GIT_TKN_URL}" -p git-revision="${GIT_TKN_BRANCH}" \
+        -l app.kubernetes.io/name="${app_name}" \
+        -p BUILD_TYPE="$build_type"
+    popd || exit 1
     set +x
 }
 
@@ -160,15 +227,17 @@ if [ "${NO_HUMAN}" == false ]; then
        echo ""
        case $a in
           1* )
-             echo "We've modified this file, time to build and deploy a new version. Times modified: $counter" | tee -a "$python_example_txt"
-             git commit -m "modifying python example, number $counter" -- "$python_example_txt"
-             git push origin "$current_branch"
+             pushd ${PELORUS_WORKING_DIR} || exit 1
+               echo "We've modified this file, time to build and deploy a new version. Times modified: $counter" | tee -a "$python_example_txt"
+               git commit -m "modifying python example, number $counter" -- "$python_example_txt"
+               git push origin "$current_branch"
 
-             run_pipeline
+               run_pipeline
 
-             echo -e "\nWhen ready, page will be available at $route"
+               echo -e "\nWhen ready, page will be available at $route"
 
-             counter=$((counter+1))
+               counter=$((counter+1))
+             popd || exit 1
           ;;
 
           2* ) exit 0 ;;
@@ -177,13 +246,15 @@ if [ "${NO_HUMAN}" == false ]; then
     done
 elif [ "${NO_HUMAN}" == true ]; then
     while [ $counter -lt "$no_deployments" ]; do
-        echo "We've modified this file, time to build and deploy a new version. Times modified: $counter" | tee -a "$python_example_txt"
-        git commit -m "modifying python example, number $counter" -- "$python_example_txt"
-        git push origin "$current_branch"
-        run_pipeline
-        echo -e "\nWhen ready, page will be available at $route"
-        counter=$((counter+1))
-        # Do not sleep on the last iteration
+        pushd ${PELORUS_WORKING_DIR} || exit 1
+          echo "We've modified this file, time to build and deploy a new version. Times modified: $counter" | tee -a "$python_example_txt"
+          git commit -m "modifying python example, number $counter" -- "$python_example_txt"
+          git push origin "$current_branch"
+          run_pipeline
+          echo -e "\nWhen ready, page will be available at $route"
+          counter=$((counter+1))
+        popd
+          # Do not sleep on the last iteration
         if [ $counter -lt "$no_deployments" ]; then
             sleep "$sleep_between"
         fi
