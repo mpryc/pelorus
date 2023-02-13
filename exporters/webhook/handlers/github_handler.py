@@ -31,10 +31,6 @@ class GithubWebhookHandler(PelorusWebhookPlugin):
             "ping": ping_function,
             "push": github_push
     }
-
-    @classmethod
-    def can_handle(cls, user_agent: str)->str:
-        pass
     
     @classmethod
     def register(cls)->str:

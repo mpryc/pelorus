@@ -15,28 +15,23 @@
 #    under the License.
 #
 
-from abc import ABC, abstractmethod
+from typing import abstractmethod
+from .pelorus_webhook import PelorusWebhookPlugin
 
-PLUGIN_TOP_LEVEL=True
+class GithubWebhookHandler(PelorusWebhookPlugin):
+    user_agent_str = "Pelorus-Webhook/"
 
-class PelorusWebhookPlugin(ABC):
-    user_agent_str = None
+    def ping_function():
+        pass
+
+    def github_push():
+        pass
+
+    handler_functions = {
+            "ping": ping_function,
+            "push": github_push
+    }
     
     @classmethod
-    def can_handle(cls, user_agent: str)->str:
-        if user_agent and cls.user_agent_str:
-            if user_agent.lower().startswith(str(cls.user_agent_str).lower()):
-                return True
-        return False
-
-    @classmethod
-    def is_pelorus_webhook_handler(cls)->bool:
-        return True
-
-    @classmethod
-    @abstractmethod
     def register(cls)->str:
-        raise NotImplementedError
-
-    def handshake(self):
-        print("AJAJAJAJAJAJAJAJ")
+        return GithubWebhookHandler.user_agent_str.lower()
