@@ -28,6 +28,10 @@ class PelorusWebhookPlugin(ABC):
         return False
     
     @classmethod
+    def is_pelorus_webhook_handler(cls)->bool:
+        return True
+
+    @classmethod
     @abstractmethod
     def register(cls)->str:
         raise NotImplementedError
