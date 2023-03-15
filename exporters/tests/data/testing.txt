@@ -1,0 +1,150 @@
+# Use operator to deploy *ONLY* webhook exporter, then:
+
+export WEBHOOK_ENDPOINT="http://webhook-exporter-pelorus.apps.cluster-mpryc1502ocp49t.mpryc1502ocp49t.mg.dog8code.com/pelorus/webhook"
+
+
+# Current date
+$ date +%s
+1678876573
+
+1. Modify the 1_deploytime_app.json to include the date from above
+   A) send to the webhook
+   $ curl -X POST "$WEBHOOK_ENDPOINT" \
+       -H "User-Agent: Pelorus-Webhook/test" \
+       -H "X-Pelorus-Event: deploytime" \
+       -H "Content-Type: application/json" \
+       -d @./1_deploytime_app.json
+
+   {"http_response":"Webhook Received","http_response_code":200}
+
+   B) Data from /metrics:
+
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876573e+09
+
+   C) Data in grafana (last 12 hours):
+
+   Application list contains: "mongo-todolist"
+   Deployment Frequency: 1
+
+   Deployment Frequency (all): 1
+
+
+2. Modify the 2_deploytime_app.json to include current timestamp (few min later)
+
+   A) send it to the webhook (similarly, but using 2_deploytime_app.json as input)
+
+   {"http_response":"Webhook Received","http_response_code":200}
+
+   B) Data from /metrics:
+
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876573e+09
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876914e+09
+
+   C) Data in grafana (last 12 hours):
+
+   Application list contains: "mongo-todolist"
+   Deployment Frequency: 1
+
+   Deployment Frequency (all): 1
+   
+3. Modify the 3_deploytime_app.json to include different namespace but same timestamp as 2_deploytime_app
+
+   A) send it to the webhook (similarly, but using 3_deploytime_app.json as input)
+
+   {"http_response":"Webhook Received","http_response_code":200}
+
+   B) Data from /metrics:
+
+  deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876573e+09
+  deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876914e+09
+
+   C) Data in grafana (last 12 hours):
+
+   Application list contains: "mongo-todolist"
+   Deployment Frequency: 1
+
+   Deployment Frequency (all): 1
+
+
+4. Modify the 4_deploytime_app.json to include different namespace AND different timestamp as 2_deploytime_app
+
+   A) send it to the webhook (similarly, but using 4_deploytime_app.json as input)
+
+   {"http_response":"Webhook Received","http_response_code":200}
+
+   B) Data from /metrics:
+
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876573e+09
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876914e+09
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="other-namespace"} 1.678877292e+09
+
+   C) Data in grafana (last 12 hours):
+
+   Application list contains: "mongo-todolist"
+   Deployment Frequency: 2
+
+   Deployment Frequency (all): 2
+
+5. Remove the namespace from the json (5_deploytime_app.json as input)
+
+   A) send it to the webhook (similarly, but using 5_deploytime_app.json as input)
+
+   {"detail":"Invalid payload."}
+
+
+6. Change the timestamp to current one and different image sha + other namespace (6_deploytime_app.json as input)
+
+   A) send it to the webhook (similarly, but using 6_deploytime_app.json as input)
+
+   {"http_response":"Webhook Received","http_response_code":200}
+
+   B) Data from /metrics:
+
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876573e+09
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876914e+09
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="other-namespace"} 1.678877292e+09
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:bf4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="other-namespace"} 1.678877573e+09
+
+
+   Application list contains: "mongo-todolist"
+   Deployment Frequency: 3
+
+   Deployment Frequency (all): 3
+
+7. Modify the image sha only (7_deploytime_app.json as input)
+
+   A) send it to the webhook (similarly, but using 7_deploytime_app.json as input)
+
+   {"http_response":"Webhook Received","http_response_code":200}
+
+   B) Data from /metrics:
+
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876573e+09
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876914e+09
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="other-namespace"} 1.678877292e+09
+   deploy_timestamp{app="mongo-todolist",image_sha="sha256:bf4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="other-namespace"} 1.678877573e+09
+
+
+   Application list contains: "mongo-todolist"
+   Deployment Frequency: 3
+
+   Deployment Frequency (all): 3
+
+
+8.
+
+
+   A) send it to the webhook (similarly, but using 7_deploytime_app.json as input)
+
+   {"http_response":"Webhook Received","http_response_code":200}
+
+deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876573e+09
+deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="mongo-persistent"} 1.678876914e+09
+deploy_timestamp{app="mongo-todolist",image_sha="sha256:af4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="other-namespace"} 1.678877292e+09
+deploy_timestamp{app="mongo-todolist",image_sha="sha256:bf4092ccbfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="other-namespace"} 1.678877573e+09
+deploy_timestamp{app="mongo-todolist",image_sha="sha256:77777777bfa99a3ec1ea93058fe39b8ddfd8db1c7a18081db397c50a0b8ec77d",namespace="other-namespace"} 1.67887916e+09
+
+   Application list contains: "mongo-todolist"
+   Deployment Frequency: 4
+
+   Deployment Frequency (all): 4
