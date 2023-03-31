@@ -3,7 +3,7 @@ name: Pelorus Exporter Build
 on:
   push:
     branches:
-      - master
+      - test_build_image
     paths:
       - 'exporters/**'
       - 'charts/pelorus/subcharts/exporters/templates/_buildconfig.yaml'
@@ -20,169 +20,37 @@ env:
 
 jobs:
   build-committime:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set Image version
-        run: |
-          IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
-          echo "VERSION=$IMG_VER" >> $GITHUB_ENV
+      - name: Build committime
+        uses: "./.github/workflow_templates/build_push_exporters"
+        with:
+          exporter_type: committime
 
       # Setup S2i and Build container image
       - name: Setup and Build
         id: build-exporter
         uses: redhat-actions/s2i-build@v2
         with:
-          image: 'pelorus-committime-exporter'
+          image: 'pelorus-${{ inputs.version }}-exporter'
           path_context: 'exporters'
           builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
+          tags: ${{ env.latesttag }} ${{ github.sha }}
           log_level: ${{ env.s2i_log_level }}
 
-      # Push Image to Quay registry
-      - name: Push To Quay Action
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build-exporter.outputs.image }}
-          tags: ${{ steps.build-exporter.outputs.tags }}
-          registry: ${{ env.imageregistry }}/${{ env.imagenamespace }}
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-
-  build-deploytime:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set Image version
+      - name: Tag exporter image with additional version tag
         run: |
-          IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
-          echo "VERSION=$IMG_VER" >> $GITHUB_ENV
-
-      # Setup S2i and Build container image
-      - name: Setup and Build
-        id: build-exporter
-        uses: redhat-actions/s2i-build@v2
-        with:
-          image: 'pelorus-deploytime-exporter'
-          path_context: 'exporters'
-          builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
-          log_level: ${{ env.s2i_log_level }}
-
+          docker tag ${{ steps.build-exporter.outputs.image }}:${{ github.sha }} ${{ steps.build-exporter.outputs.image }}:${{ env.VERSION }}
 
       # Push Image to Quay registry
       - name: Push To Quay Action
         uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ steps.build-exporter.outputs.image }}
-          tags: ${{ steps.build-exporter.outputs.tags }}
-          registry: ${{ env.imageregistry }}/${{ env.imagenamespace }}
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-
-  build-failure:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set Image version
-        run: |
-          IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
-          echo "VERSION=$IMG_VER" >> $GITHUB_ENV
-
-      # Setup S2i and Build container image
-      - name: Setup and Build
-        id: build-exporter
-        uses: redhat-actions/s2i-build@v2
-        with:
-          image: 'pelorus-failure-exporter'
-          path_context: 'exporters'
-          builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
-          log_level: ${{ env.s2i_log_level }}
-
-
-      # Push Image to Quay registry
-      - name: Push To Quay Action
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build-exporter.outputs.image }}
-          tags: ${{ steps.build-exporter.outputs.tags }}
-          registry: ${{ env.imageregistry }}/${{ env.imagenamespace }}
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-
-  build-releasetime:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set Image version
-        run: |
-          IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
-          echo "VERSION=$IMG_VER" >> $GITHUB_ENV
-
-      # Setup S2i and Build container image
-      - name: Setup and Build
-        id: build-exporter
-        uses: redhat-actions/s2i-build@v2
-        with:
-          image: 'pelorus-releasetime-exporter'
-          path_context: 'exporters'
-          builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
-          log_level: ${{ env.s2i_log_level }}
-
-
-      # Push Image to Quay registry
-      - name: Push To Quay Action
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build-exporter.outputs.image }}
-          tags: ${{ steps.build-exporter.outputs.tags }}
-          registry: ${{ env.imageregistry }}/${{ env.imagenamespace }}
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-
-  build-webhook:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set Image version
-        run: |
-          IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
-          echo "VERSION=$IMG_VER" >> $GITHUB_ENV
-
-      # Setup S2i and Build container image
-      - name: Setup and Build
-        id: build-exporter
-        uses: redhat-actions/s2i-build@v2
-        with:
-          image: 'pelorus-webhook-exporter'
-          path_context: 'exporters'
-          builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
-          log_level: ${{ env.s2i_log_level }}
-
-
-      # Push Image to Quay registry
-      - name: Push To Quay Action
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build-exporter.outputs.image }}
-          tags: ${{ steps.build-exporter.outputs.tags }}
+          tags: ${{ steps.build-exporter.outputs.tags }} ${{ env.VERSION }}
           registry: ${{ env.imageregistry }}/${{ env.imagenamespace }}
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_PASSWORD }}

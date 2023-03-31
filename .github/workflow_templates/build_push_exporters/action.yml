@@ -1,0 +1,16 @@
+name: build_push_exporters
+
+inputs:
+  exporter_type: 
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set Image version
+      shell: bash
+      run: |
+        IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
+        echo "Image tag: $IMG_VER"
+        echo "VERSION=$IMG_VER" >> $GITHUB_ENV
+
