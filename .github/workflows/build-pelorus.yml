@@ -7,6 +7,7 @@ on:
     paths:
       - 'exporters/**'
       - 'charts/pelorus/subcharts/exporters/templates/_buildconfig.yaml'
+      - 'charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml'
       - '.github/workflows/build-pelorus.yml'
 
 env:
@@ -24,6 +25,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Set Image version
+        run: |
+          IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
+          echo "VERSION=$IMG_VER" >> $GITHUB_ENV
+
       # Setup S2i and Build container image
       - name: Setup and Build
         id: build-exporter
@@ -32,7 +38,7 @@ jobs:
           image: 'pelorus-committime-exporter'
           path_context: 'exporters'
           builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }}
+          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
           log_level: ${{ env.s2i_log_level }}
 
       # Push Image to Quay registry
@@ -52,6 +58,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Set Image version
+        run: |
+          IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
+          echo "VERSION=$IMG_VER" >> $GITHUB_ENV
+
       # Setup S2i and Build container image
       - name: Setup and Build
         id: build-exporter
@@ -60,7 +71,7 @@ jobs:
           image: 'pelorus-deploytime-exporter'
           path_context: 'exporters'
           builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }}
+          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
           log_level: ${{ env.s2i_log_level }}
 
 
@@ -81,6 +92,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Set Image version
+        run: |
+          IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
+          echo "VERSION=$IMG_VER" >> $GITHUB_ENV
+
       # Setup S2i and Build container image
       - name: Setup and Build
         id: build-exporter
@@ -89,7 +105,7 @@ jobs:
           image: 'pelorus-failure-exporter'
           path_context: 'exporters'
           builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }}
+          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
           log_level: ${{ env.s2i_log_level }}
 
 
@@ -110,6 +126,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Set Image version
+        run: |
+          IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
+          echo "VERSION=$IMG_VER" >> $GITHUB_ENV
+
       # Setup S2i and Build container image
       - name: Setup and Build
         id: build-exporter
@@ -118,7 +139,7 @@ jobs:
           image: 'pelorus-releasetime-exporter'
           path_context: 'exporters'
           builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }}
+          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
           log_level: ${{ env.s2i_log_level }}
 
 
@@ -139,6 +160,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Set Image version
+        run: |
+          IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
+          echo "VERSION=$IMG_VER" >> $GITHUB_ENV
+
       # Setup S2i and Build container image
       - name: Setup and Build
         id: build-exporter
@@ -147,7 +173,7 @@ jobs:
           image: 'pelorus-webhook-exporter'
           path_context: 'exporters'
           builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }}
+          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
           log_level: ${{ env.s2i_log_level }}
 
 
