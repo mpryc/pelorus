@@ -1,7 +1,15 @@
 name: build_push_exporters
 
 inputs:
-  exporter_type: 
+  image: 
+    required: true
+  builder_image:
+    required: true
+  latest_tag:
+    required: true
+  sha_tag:
+    required: true
+  s2i_log_level:
     required: true
 
 runs:
@@ -13,4 +21,20 @@ runs:
         IMG_VER=$(grep quay.io charts/pelorus/subcharts/exporters/templates/_imagestream_from_image.yaml | grep -oP '(?<=default ")[^"]+')
         echo "Image tag: $IMG_VER"
         echo "VERSION=$IMG_VER" >> $GITHUB_ENV
+
+    # Setup S2i and Build container image
+    - name: Setup and Build
+      id: build-exporter
+      uses: redhat-actions/s2i-build@v2
+      with:
+        image: ${{ inputs.image }}
+        path_context: 'exporters'
+        builder_image: ${{ inputs.builder_image }}
+        tags: ${{ inputs.latest_tag }} ${{ inputs.sha_tag }}
+        log_level: ${{ inputs.s2i_log_level }}
+
+    - name: Tag exporter image with additional version tag
+      shell: bash
+      run: |
+        docker tag ${{ steps.build-exporter.outputs.image }}:${{ inputs.sha_tag }} ${{ steps.build-exporter.outputs.image }}:${{ env.VERSION }}
 

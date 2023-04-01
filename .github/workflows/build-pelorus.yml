@@ -28,29 +28,18 @@ jobs:
       - name: Build committime
         uses: "./.github/workflow_templates/build_push_exporters"
         with:
-          exporter_type: committime
-
-      # Setup S2i and Build container image
-      - name: Setup and Build
-        id: build-exporter
-        uses: redhat-actions/s2i-build@v2
-        with:
-          image: 'pelorus-${{ inputs.version }}-exporter'
-          path_context: 'exporters'
+          image: 'pelorus-committime-exporter'
           builder_image: ${{ env.builder_image }}
-          tags: ${{ env.latesttag }} ${{ github.sha }}
-          log_level: ${{ env.s2i_log_level }}
-
-      - name: Tag exporter image with additional version tag
-        run: |
-          docker tag ${{ steps.build-exporter.outputs.image }}:${{ github.sha }} ${{ steps.build-exporter.outputs.image }}:${{ env.VERSION }}
+          latest_tag: ${{ env.latesttag }}
+          sha_tag: ${{ github.sha }}
+          s2i_log_level: ${{ env.s2i_log_level }}
 
       # Push Image to Quay registry
       - name: Push To Quay Action
         uses: redhat-actions/push-to-registry@v2
         with:
-          image: ${{ steps.build-exporter.outputs.image }}
-          tags: ${{ steps.build-exporter.outputs.tags }} ${{ env.VERSION }}
+          image: 'pelorus-committime-exporter'
+          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
           registry: ${{ env.imageregistry }}/${{ env.imagenamespace }}
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_PASSWORD }}
