@@ -13,33 +13,97 @@ on:
 env:
   builder_image: 'registry.access.redhat.com/ubi8/python-39'
   imageregistry: 'quay.io'
-  # default 'pelorus'
+  # Use 'pelorus' for release
   imagenamespace: ${{ secrets.QUAY_IMAGE_NAMESPACE }}
-  latesttag: latest
   s2i_log_level: 2
 
 jobs:
-  build-committime:
+  build-and-push-committime-image:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Build committime
+      - name: Build and push committime exporter
         uses: "./.github/workflow_templates/build_push_exporters"
         with:
           image: 'pelorus-committime-exporter'
           builder_image: ${{ env.builder_image }}
-          latest_tag: ${{ env.latesttag }}
-          sha_tag: ${{ github.sha }}
           s2i_log_level: ${{ env.s2i_log_level }}
+          quay_imageregistry: ${{ env.imageregistry }}
+          quay_imagenamespace: ${{ secrets.QUAY_IMAGE_NAMESPACE }}
+          quay_username: ${{ secrets.QUAY_USERNAME }}
+          quay_password: ${{ secrets.QUAY_PASSWORD }}
 
-      # Push Image to Quay registry
-      - name: Push To Quay Action
-        uses: redhat-actions/push-to-registry@v2
+
+  build-and-push-deploytime-image:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push deploytime exporter
+        uses: "./.github/workflow_templates/build_push_exporters"
         with:
-          image: 'pelorus-committime-exporter'
-          tags: ${{ env.latesttag }} ${{ github.sha }} ${{ env.VERSION }}
-          registry: ${{ env.imageregistry }}/${{ env.imagenamespace }}
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
+          image: 'pelorus-deploytime-exporter'
+          builder_image: ${{ env.builder_image }}
+          s2i_log_level: ${{ env.s2i_log_level }}
+          quay_imageregistry: ${{ env.imageregistry }}
+          quay_imagenamespace: ${{ secrets.QUAY_IMAGE_NAMESPACE }}
+          quay_username: ${{ secrets.QUAY_USERNAME }}
+          quay_password: ${{ secrets.QUAY_PASSWORD }}
+
+
+  build-and-push-failure-image:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push failure exporter
+        uses: "./.github/workflow_templates/build_push_exporters"
+        with:
+          image: 'pelorus-failure-exporter'
+          builder_image: ${{ env.builder_image }}
+          s2i_log_level: ${{ env.s2i_log_level }}
+          quay_imageregistry: ${{ env.imageregistry }}
+          quay_imagenamespace: ${{ secrets.QUAY_IMAGE_NAMESPACE }}
+          quay_username: ${{ secrets.QUAY_USERNAME }}
+          quay_password: ${{ secrets.QUAY_PASSWORD }}
+
+
+  build-and-push-releasetime-image:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push releasetime exporter
+        uses: "./.github/workflow_templates/build_push_exporters"
+        with:
+          image: 'pelorus-releasetime-exporter'
+          builder_image: ${{ env.builder_image }}
+          s2i_log_level: ${{ env.s2i_log_level }}
+          quay_imageregistry: ${{ env.imageregistry }}
+          quay_imagenamespace: ${{ secrets.QUAY_IMAGE_NAMESPACE }}
+          quay_username: ${{ secrets.QUAY_USERNAME }}
+          quay_password: ${{ secrets.QUAY_PASSWORD }}
+
+
+  build-and-push-webhook-image:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push webhook exporter
+        uses: "./.github/workflow_templates/build_push_exporters"
+        with:
+          image: 'pelorus-webhook-exporter'
+          builder_image: ${{ env.builder_image }}
+          s2i_log_level: ${{ env.s2i_log_level }}
+          quay_imageregistry: ${{ env.imageregistry }}
+          quay_imagenamespace: ${{ secrets.QUAY_IMAGE_NAMESPACE }}
+          quay_username: ${{ secrets.QUAY_USERNAME }}
+          quay_password: ${{ secrets.QUAY_PASSWORD }}
+
