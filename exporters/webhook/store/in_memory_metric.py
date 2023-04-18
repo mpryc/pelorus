@@ -155,10 +155,12 @@ in_memory_commit_metrics = PelorusGaugeMetricFamily(
     labels=list(_pelorus_metric_to_dict(CommitTimePelorusPayload).values()),
 )
 
+labelsa = list(_pelorus_metric_to_dict(DeployTimePelorusPayload).values())
+labelsa.append("deploytime_timestamp")
 in_memory_deploy_timestamp_metric = PelorusGaugeMetricFamily(
     "deploy_timestamp",
     "Deployment timestamp",
-    labels=list(_pelorus_metric_to_dict(DeployTimePelorusPayload).values()),
+    labels=labelsa,
 )
 
 in_memory_failure_creation_metric = PelorusGaugeMetricFamily(
