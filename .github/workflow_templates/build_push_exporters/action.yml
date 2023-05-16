@@ -31,23 +31,32 @@ runs:
       id: build-exporter
       uses: redhat-actions/s2i-build@v2
       with:
-        image: ${{ inputs.image }}
+        image: ${{ inputs.image }}-noskopeo
         path_context: 'exporters'
         builder_image: ${{ inputs.builder_image }}
-        tags: latest ${{ github.sha }}
+        tags: ${{ github.sha }}
         log_level: ${{ inputs.s2i_log_level }}
 
-    - name: Tag exporter image with additional version tag
+    - name: Create Dockerfile
       shell: bash
       run: |
-        docker tag ${{ steps.build-exporter.outputs.image }}:${{ github.sha }} ${{ steps.build-exporter.outputs.image }}:${{ env.VERSION }}
+        cat <<EOF >> Dockerfile
+        FROM ${{ steps.build-exporter.outputs.image }}-noskopeo:${{ github.sha }}
+        USER root
+        RUN dnf -y install skopeo
+        USER 1001
+        EOF
+
+    - name: Build updated image
+      run: |
+        docker build -t ${{ inputs.image }}:${{ github.sha }} ${{ inputs.image }}:latest ${{ inputs.image }}:${{ env.VERSION }} -f Dockerfile .
 
     # Push Image to Quay registry
     - name: Push To Quay Action
       uses: redhat-actions/push-to-registry@v2
       with:
-        image: ${{ steps.build-exporter.outputs.image }}
-        tags: ${{ steps.build-exporter.outputs.tags }} ${{ env.VERSION }}
+        image: ${{ inputs.image }}
+        tags: ${{ github.sha }} latest ${{ env.VERSION }}
         registry: ${{ inputs.quay_imageregistry }}/${{ inputs.quay_imagenamespace }}
         username: ${{ inputs.quay_username }}
         password: ${{ inputs.quay_password }}

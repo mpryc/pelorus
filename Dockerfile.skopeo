@@ -1,0 +1,10 @@
+FROM quay.io/pelorus/pelorus-committime-exporter:latest
+
+USER root
+
+RUN dnf -y install skopeo
+
+USER 1001
+
+CMD ["/bin/bash"]
+
