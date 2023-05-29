@@ -2,6 +2,8 @@
 
 Failure time exporter captures the timestamp at which a failure occurred, in a production environment, and when it was resolved. It does this by parsing the information of when the issue was created, and closed, in the Issue Tracker(s).
 
+Failure exporter only collects failure events that are less than 30 minutes old. Older failures won't be included unless they have been already collected.
+
 Failure Time Exporter may be deployed with one of the [supported Issues Trackers](../Overview.md#issue-trackers). In one clusters' namespace there may be multiple instances of Failure Time Exporter, one for each provider (or each project). Each provider requires specific [configuration](#failureconfigmap).
 
 Each Failure time exporter configuration option must be placed under `spec.exporters.instances` in the Pelorus configuration object YAML file as in the example:
