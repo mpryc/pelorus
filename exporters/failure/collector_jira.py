@@ -107,12 +107,12 @@ class JiraFailureCollector(AbstractFailureCollector):
             # Connect to JIRA
             if not self.username:
                 jira_client = JIRA(
-                    options={"server": self.tracker_api},
+                    options={"server": self.tracker_api, "verify": False},
                     token_auth=self.token,
                 )
             else:
                 jira_client = JIRA(
-                    options={"server": self.tracker_api},
+                    options={"server": self.tracker_api, "verify": False},
                     basic_auth=(self.username, self.token),
                 )
             # Ensure connection was performed
