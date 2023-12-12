@@ -16,6 +16,7 @@
 #
 
 import logging
+import os
 from typing import List, Optional
 
 from attrs import define, field
@@ -104,15 +105,32 @@ class JiraFailureCollector(AbstractFailureCollector):
     def _connect_to_jira(self) -> JIRA:
         """Connect to JIRA instance which may be cloud based or self-hosted."""
         try:
+            # Set default SSL verification options
+            ssl_verify = False
+            ssl_file_path = "/etc/pelorus/custom_certs/my-certs/jira.pem"
+
+            # Found an SSL cert file, allow to verify connection using it
+            if os.path.exists(ssl_file_path) and os.path.isfile(ssl_file_path) \
+               and os.access(ssl_file_path, os.R_OK):
+               ssl_verify = ssl_file_path
+
+            # Configure JIRA options
+            jira_options = {
+                "server": self.tracker_api,
+                "verify": ssl_verify
+            }
+
+            logging.debug("JIRA connection options: %s", jira_options)
+
             # Connect to JIRA
             if not self.username:
                 jira_client = JIRA(
-                    options={"server": self.tracker_api},
+                    options=jira_options,
                     token_auth=self.token,
                 )
             else:
                 jira_client = JIRA(
-                    options={"server": self.tracker_api},
+                    options=jira_options,
                     basic_auth=(self.username, self.token),
                 )
             # Ensure connection was performed
